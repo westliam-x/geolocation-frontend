@@ -92,7 +92,7 @@
             console.log(`Location updated: Latitude = ${latitude}, Longitude = ${longitude}, Timestamp = ${timestamp}`);
 
             // Send the data to the server
-            fetch('http://localhost:3000/updateLocation', {
+            fetch('https://geolocation-tracking-system.onrender.com', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
