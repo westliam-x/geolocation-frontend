@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            color: #555;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #location {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+
+        #status {
+            margin-top: 10px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>Geolocation Tracker</h1>
+    <button id="trackLocation">Track Location</button>
+    <div id="location">
+        <div id="coords"></div>
+        <div id="status">Waiting for location...</div>
+    </div>
+
+    <script>
+        document.getElementById('trackLocation').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                // Start watching the position
+                navigator.geolocation.watchPosition(showPosition, showError, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            } else {
+                document.getElementById('coords').innerHTML = "Geolocation is not supported by this browser.";
+            }
+        });
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            var timestamp = new Date(position.timestamp);
+
+            document.getElementById('coords').innerHTML = "Latitude: " + latitude + 
+            "<br>Longitude: " + longitude + 
+            "<br>Last updated: " + timestamp.toLocaleTimeString();
+
+            document.getElementById('status').innerHTML = "Location updated.";
+
+            console.log(`Location updated: Latitude = ${latitude}, Longitude = ${longitude}, Timestamp = ${timestamp}`);
+
+            // Send the data to the server
+            fetch('http://localhost:3000/updateLocation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    latitude: latitude,
+                    longitude: longitude,
+                    timestamp: timestamp
+                })
+            }).then(response => response.json())
+              .then(data => console.log('Server response:', data))
+              .catch((error) => console.error('Error:', error));
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById('coords').innerHTML = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById('coords').innerHTML = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById('coords').innerHTML = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById('coords').innerHTML = "An unknown error occurred.";
+                    break;
+            }
+            document.getElementById('status').innerHTML = "Error occurred.";
+        }
+    </script>
+</body>
+</html>
